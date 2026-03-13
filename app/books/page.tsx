@@ -1,4 +1,46 @@
+"use client";
+
+import { useState } from "react";
+
 export default function Books() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      title: formData.get("title"),
+      author: formData.get("author"),
+      isbn: formData.get("isbn"),
+      year: formData.get("year"),
+    };
+
+    try {
+      const res = await fetch("/api/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "Ocorreu um erro ao salvar o livro.");
+      }
+
+      setMessage({ type: "success", text: result.message });
+      (e.target as HTMLFormElement).reset(); // Limpa o formulário
+    } catch (error: any) {
+      setMessage({ type: "error", text: error.message });
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-white to-zinc-50 dark:from-zinc-900 dark:via-zinc-950 dark:to-black font-sans p-4 relative overflow-hidden">
       
@@ -22,7 +64,14 @@ export default function Books() {
             </p>
           </div>
           
-          <form className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+            
+            {message && (
+              <div className={`p-4 rounded-xl text-sm font-medium animate-in fade-in zoom-in-95 duration-300 ${message.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" : "bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"}`}>
+                {message.text}
+              </div>
+            )}
+
             <div className="space-y-2 group">
               <label htmlFor="title" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
                 Título do Livro
@@ -31,6 +80,7 @@ export default function Books() {
                 type="text"
                 id="title"
                 name="title"
+                required
                 placeholder="Ex: O Senhor dos Anéis"
                 className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
               />
@@ -44,6 +94,7 @@ export default function Books() {
                 type="text"
                 id="author"
                 name="author"
+                required
                 placeholder="Ex: J.R.R. Tolkien"
                 className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
               />
@@ -58,6 +109,7 @@ export default function Books() {
                   type="text"
                   id="isbn"
                   name="isbn"
+                  required
                   placeholder="978-0..."
                   className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
                 />
@@ -71,6 +123,7 @@ export default function Books() {
                   type="number"
                   id="year"
                   name="year"
+                  required
                   placeholder="2024"
                   className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
                 />
@@ -79,17 +132,30 @@ export default function Books() {
 
             <div className="pt-6">
               <button
-                type="button"
-                className="w-full relative group overflow-hidden px-4 py-3.5 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-lg shadow-zinc-900/20 dark:shadow-indigo-900/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-zinc-900/50 dark:focus:ring-indigo-500/50 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 active:scale-[0.98]"
+                type="submit"
+                disabled={isLoading}
+                className="w-full relative group overflow-hidden px-4 py-3.5 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg shadow-zinc-900/20 dark:shadow-indigo-900/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-zinc-900/50 dark:focus:ring-indigo-500/50 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 active:scale-[0.98]"
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:scale-110">
-                    <path d="M5 12h14"/>
-                    <path d="M12 5v14"/>
-                  </svg>
-                  Adicionar ao Acervo
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:scale-110">
+                        <path d="M5 12h14"/>
+                        <path d="M12 5v14"/>
+                      </svg>
+                      Adicionar ao Acervo
+                    </>
+                  )}
                 </span>
-                <div className="absolute inset-0 bg-white/10 dark:bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>
+                {!isLoading && <div className="absolute inset-0 bg-white/10 dark:bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>}
               </button>
             </div>
           </form>
