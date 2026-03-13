@@ -3,12 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+interface Publisher {
+  id: number;
+  name: string;
+}
+
 interface Book {
   id: number;
   title: string;
   author: string;
   isbn: string;
   publishYear: number;
+  publisherId?: number;
   publisher?: {
     name: string;
   };
@@ -16,19 +22,33 @@ interface Book {
 
 export default function BooksList() {
   const [books, setBooks] = useState<Book[]>([]);
+  const [publishers, setPublishers] = useState<Publisher[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Edit Modal State
+  const [editingBook, setEditingBook] = useState<Book | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   useEffect(() => {
-    async function fetchBooks() {
+    async function fetchBooksAndPublishers() {
       try {
-        const response = await fetch("/api/books");
-        if (!response.ok) {
-          throw new Error("Erro ao buscar a lista de livros.");
+        const [booksRes, publishersRes] = await Promise.all([
+          fetch("/api/books"),
+          fetch("/api/publishers")
+        ]);
+
+        if (!booksRes.ok) throw new Error("Erro ao buscar a lista de livros.");
+        
+        const booksData = await booksRes.json();
+        setBooks(booksData.books);
+
+        if (publishersRes.ok) {
+          const publishersData = await publishersRes.json();
+          setPublishers(publishersData.publishers);
         }
-        const data = await response.json();
-        setBooks(data.books);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -36,7 +56,7 @@ export default function BooksList() {
       }
     }
 
-    fetchBooks();
+    fetchBooksAndPublishers();
   }, []);
 
   const handleDelete = async (id: number) => {
@@ -60,8 +80,75 @@ export default function BooksList() {
     }
   };
 
+  const handleUpdate = (book: Book) => {
+    setUpdateMessage(null);
+    setEditingBook(book);
+  };
+
+  const submitUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingBook) return;
+
+    setIsUpdating(true);
+    setUpdateMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      title: formData.get("title"),
+      author: formData.get("author"),
+      isbn: formData.get("isbn"),
+      year: formData.get("year"),
+      publisherId: formData.get("publisherId"),
+    };
+
+    try {
+      const response = await fetch(`/api/books?id=${editingBook.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao atualizar o livro.");
+      }
+
+      // Update the local state
+      setBooks((prevBooks) => 
+        prevBooks.map((b) => {
+          if (b.id === editingBook.id) {
+            const selectedPublisher = publishers.find(p => p.id === parseInt(data.publisherId as string));
+            return {
+              ...b,
+              title: data.title as string,
+              author: data.author as string,
+              isbn: data.isbn as string,
+              publishYear: parseInt(data.year as string),
+              publisherId: parseInt(data.publisherId as string),
+              publisher: selectedPublisher ? { name: selectedPublisher.name } : b.publisher
+            };
+          }
+          return b;
+        })
+      );
+
+      setUpdateMessage({ type: "success", text: "Livro atualizado com sucesso!" });
+      
+      // Close modal after short delay to show success message
+      setTimeout(() => {
+        setEditingBook(null);
+      }, 1500);
+
+    } catch (err: any) {
+      setUpdateMessage({ type: "error", text: err.message });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   return (
-    <div className="flex-1 p-8 pt-6">
+    <div className="flex-1 p-8 pt-6 relative">
       
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
         <div>
@@ -139,6 +226,17 @@ export default function BooksList() {
                           </svg>
                         </button>
                       </td>
+                      <td className="py-4 px-4 text-sm text-center">
+                        <button
+                          onClick={() => handleUpdate(book)}
+                          className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 p-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors inline-flex items-center justify-center"
+                          title="Atualizar livro"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l-2-2L6 16v-2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-1v4l4.5 2L20 7l-2-2 1-6z"></path>
+                          </svg>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -147,6 +245,143 @@ export default function BooksList() {
           )}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingBook && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-zinc-950 w-full max-w-md rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                Editar Livro
+              </h3>
+              <button 
+                onClick={() => setEditingBook(null)}
+                className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            
+            <form onSubmit={submitUpdate} className="p-6 space-y-5 flex flex-col max-h-[80vh] overflow-y-auto">
+              {updateMessage && (
+                <div className={`p-4 rounded-xl text-sm font-medium ${updateMessage.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" : "bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"}`}>
+                  {updateMessage.text}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label htmlFor="title" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  Título do Livro
+                </label>
+                <input
+                  type="text"
+                  id="title"
+                  name="title"
+                  required
+                  defaultValue={editingBook.title}
+                  className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="author" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  Autor
+                </label>
+                <input
+                  type="text"
+                  id="author"
+                  name="author"
+                  required
+                  defaultValue={editingBook.author}
+                  className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="publisherId" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                  Editora / Selo
+                </label>
+                <select
+                  id="publisherId"
+                  name="publisherId"
+                  required
+                  defaultValue={editingBook.publisherId}
+                  className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 disabled:opacity-50"
+                >
+                  <option value="" disabled>Selecione uma editora</option>
+                  {publishers.map((pub) => (
+                    <option key={pub.id} value={pub.id}>
+                      {pub.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="isbn" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    ISBN
+                  </label>
+                  <input
+                    type="text"
+                    id="isbn"
+                    name="isbn"
+                    required
+                    defaultValue={editingBook.isbn}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="year" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                    Ano
+                  </label>
+                  <input
+                    type="number"
+                    id="year"
+                    name="year"
+                    required
+                    defaultValue={editingBook.publishYear}
+                    className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setEditingBook(null)}
+                  className="flex-1 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdating}
+                  className="flex-1 relative group px-4 py-3 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
+                >
+                  <span className="flex items-center justify-center gap-2">
+                    {isUpdating ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar Alterações"
+                    )}
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

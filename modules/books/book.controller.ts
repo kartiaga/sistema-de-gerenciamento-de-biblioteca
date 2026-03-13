@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { BookService } from "./book.service";
+import { CreateBookDTO } from "./dtos/create-book.dto";
 
 export class BookController {
   private bookService: BookService;
@@ -73,6 +74,26 @@ export class BookController {
       return NextResponse.json({ message: "Livro excluído com sucesso!", book }, { status: 200 });
     } catch (error) {
       console.error("Erro ao excluir livro:", error);
+      return NextResponse.json(
+        { error: "Erro interno no servidor." },
+        { status: 500 }
+      );
+    }
+  }
+
+  async update(request: Request, id: number) {
+    try {
+      const { title, author, isbn, year, publisherId } = await request.json();
+      const book = await this.bookService.updateBook(id, {
+        title,
+        author,
+        isbn,
+        publishYear: parseInt(year),
+        publisherId: parseInt(publisherId),
+      });
+      return NextResponse.json({ message: "Livro atualizado com sucesso!", book }, { status: 200 });
+    } catch (error) {
+      console.error("Erro ao atualizar livro:", error);
       return NextResponse.json(
         { error: "Erro interno no servidor." },
         { status: 500 }

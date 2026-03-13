@@ -28,4 +28,11 @@ export class BookRepository {
       where: { id },
     });
   }
+
+  async update(id: number, data: CreateBookDTO) {
+    return await prisma.book.update({
+      where: { id },
+      data,
+    });
+  }
 }

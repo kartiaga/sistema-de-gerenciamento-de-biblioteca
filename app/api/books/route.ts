@@ -26,3 +26,19 @@ export async function DELETE(request: Request) {
 
   return bookController.delete(id);
 }
+
+export async function PUT(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const idStr = searchParams.get("id");
+  
+  if (!idStr) {
+    return NextResponse.json({ error: "ID é obrigatório" }, { status: 400 });
+  }
+
+  const id = parseInt(idStr, 10);
+  if (isNaN(id)) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
+
+  return bookController.update(request, id);
+}

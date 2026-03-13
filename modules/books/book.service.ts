@@ -32,4 +32,8 @@ export class BookService {
   async deleteBook(id: number) {
     return await this.bookRepository.delete(id);
   }
+
+  async updateBook(id: number, data: CreateBookDTO) {
+    return await this.bookRepository.update(id, data);
+  }
 }
