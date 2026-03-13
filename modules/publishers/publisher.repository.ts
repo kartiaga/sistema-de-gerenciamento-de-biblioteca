@@ -13,4 +13,17 @@ export class PublisherRepository {
       orderBy: { id: "desc" },
     });
   }
+
+  async delete(id: number) {
+    return prisma.publisher.delete({
+      where: { id },
+    });
+  }
+
+  async update(id: number, data: CreatePublisherDTO) {
+    return prisma.publisher.update({
+      where: { id },
+      data,
+    });
+  }
 }

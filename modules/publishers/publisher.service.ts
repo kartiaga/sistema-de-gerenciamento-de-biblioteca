@@ -19,4 +19,15 @@ export class PublisherService {
   async getAllPublishers() {
     return await this.publisherRepository.findAll();
   }
+
+  async deletePublisher(id: number) {
+    return await this.publisherRepository.delete(id);
+  }
+
+  async updatePublisher(id: number, data: CreatePublisherDTO) {
+    if (!data.name || !data.address || !data.website || !data.email) {
+      throw new Error("INCOMPLETE_DATA");
+    }
+    return await this.publisherRepository.update(id, data);
+  }
 }
