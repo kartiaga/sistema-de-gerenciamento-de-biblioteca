@@ -11,3 +11,14 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model Book {
+  id          Int      @id @default(autoincrement())
+  title       String
+  author      String
+  isbn        String   @unique
+  publishYear Int
+  createdAt   DateTime @default(now())
+
+  @@map("books") // Garante que a tabela no Postgres se chame "books"
+}
