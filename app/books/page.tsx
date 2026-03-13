@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 interface Book {
   id: number;
@@ -16,7 +15,6 @@ interface Book {
 }
 
 export default function BooksList() {
-  const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +38,27 @@ export default function BooksList() {
 
     fetchBooks();
   }, []);
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Você tem certeza que deseja deletar este livro do banco de dados?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/books?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao deletar o livro.");
+      }
+
+      setBooks((prevBooks) => prevBooks.filter((book) => book.id !== id));
+      alert("Livro deletado com sucesso!");
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   return (
     <div className="flex-1 p-8 pt-6">
@@ -93,6 +112,7 @@ export default function BooksList() {
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">Editora</th>
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">ISBN</th>
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400 text-right">Ano</th>
+                    <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400 text-center w-20">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200/50 dark:divide-zinc-800/50">
@@ -104,6 +124,21 @@ export default function BooksList() {
                       <td className="py-4 px-4 text-sm text-zinc-800 dark:text-zinc-200">{book.publisher?.name || 'Desconhecida'}</td>
                       <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300 font-mono">{book.isbn}</td>
                       <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300 text-right">{book.publishYear}</td>
+                      <td className="py-4 px-4 text-sm text-center">
+                        <button
+                          onClick={() => handleDelete(book.id)}
+                          className="text-red-500 hover:text-red-600 dark:text-red-400 dark:hover:text-red-300 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors inline-flex items-center justify-center"
+                          title="Deletar livro"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                          </svg>
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

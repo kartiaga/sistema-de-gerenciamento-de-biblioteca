@@ -66,4 +66,17 @@ export class BookController {
       );
     }
   }
+
+  async delete(id: number) {
+    try {
+      const book = await this.bookService.deleteBook(id);
+      return NextResponse.json({ message: "Livro excluído com sucesso!", book }, { status: 200 });
+    } catch (error) {
+      console.error("Erro ao excluir livro:", error);
+      return NextResponse.json(
+        { error: "Erro interno no servidor." },
+        { status: 500 }
+      );
+    }
+  }
 }

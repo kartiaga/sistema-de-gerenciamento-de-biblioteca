@@ -22,4 +22,10 @@ export class BookRepository {
       orderBy: { createdAt: 'desc' }
     });
   }
+
+  async delete(id: number) {
+    return await prisma.book.delete({
+      where: { id },
+    });
+  }
 }

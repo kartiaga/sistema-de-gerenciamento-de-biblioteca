@@ -28,4 +28,8 @@ export class BookService {
   async getAllBooks() {
     return await this.bookRepository.findAll();
   }
+
+  async deleteBook(id: number) {
+    return await this.bookRepository.delete(id);
+  }
 }
