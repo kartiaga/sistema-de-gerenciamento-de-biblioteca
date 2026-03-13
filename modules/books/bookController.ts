@@ -52,4 +52,17 @@ export class BookController {
       );
     }
   }
+
+  async index() {
+    try {
+      const books = await this.bookService.getAllBooks();
+      return NextResponse.json({ books }, { status: 200 });
+    } catch (error) {
+      console.error("Erro ao buscar livros:", error);
+      return NextResponse.json(
+        { error: "Erro interno no servidor." },
+        { status: 500 }
+      );
+    }
+  }
 }

@@ -23,4 +23,8 @@ export class BookService {
 
     return await this.bookRepository.create(data);
   }
+
+  async getAllBooks() {
+    return await this.bookRepository.findAll();
+  }
 }

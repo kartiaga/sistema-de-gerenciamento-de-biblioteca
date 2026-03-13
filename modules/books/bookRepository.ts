@@ -19,4 +19,10 @@ export class BookRepository {
       where: { isbn },
     });
   }
+
+  async findAll() {
+    return await prisma.book.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+  }
 }
