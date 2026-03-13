@@ -22,3 +22,13 @@ model Book {
 
   @@map("books") // Garante que a tabela no Postgres se chame "books"
 }
+
+model Publisher {
+  id      Int    @id @default(autoincrement())
+  name    String
+  address String
+  website String
+  email   String
+
+  @@map("publishers")
+}
