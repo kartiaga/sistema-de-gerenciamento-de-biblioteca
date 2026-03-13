@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 
 interface Publisher {
   id: number;
@@ -31,6 +30,12 @@ export default function BooksList() {
   const [editingBook, setEditingBook] = useState<Book | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Create Modal State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [createMessage, setCreateMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const createFormRef = useRef<HTMLFormElement>(null);
 
   // Actions Menu State
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
@@ -94,6 +99,62 @@ export default function BooksList() {
       alert("Livro deletado com sucesso!");
     } catch (err: any) {
       alert(err.message);
+    }
+  };
+
+  const submitCreate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsCreating(true);
+    setCreateMessage(null);
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      title: formData.get("title"),
+      author: formData.get("author"),
+      isbn: formData.get("isbn"),
+      year: formData.get("year"),
+      publisherId: formData.get("publisherId"),
+    };
+
+    try {
+      const response = await fetch("/api/books", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Ocorreu um erro ao salvar o livro.");
+      }
+
+      setCreateMessage({ type: "success", text: result.message });
+      createFormRef.current?.reset();
+
+      // Add new book to the list
+      const selectedPublisher = publishers.find((p) => p.id === parseInt(data.publisherId as string));
+      setBooks((prev) => [
+        {
+          id: result.book.id,
+          title: data.title as string,
+          author: data.author as string,
+          isbn: data.isbn as string,
+          publishYear: parseInt(data.year as string),
+          publisherId: parseInt(data.publisherId as string),
+          publisher: selectedPublisher ? { name: selectedPublisher.name } : undefined,
+        },
+        ...prev,
+      ]);
+
+      setTimeout(() => {
+        setIsCreateOpen(false);
+        setCreateMessage(null);
+      }, 1500);
+    } catch (err: any) {
+      setCreateMessage({ type: "error", text: err.message });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -177,15 +238,15 @@ export default function BooksList() {
           </p>
         </div>
 
-        <Link 
-          href="/books/new"
+        <button
+          onClick={() => { setCreateMessage(null); setIsCreateOpen(true); }}
           className="px-5 py-2.5 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm flex items-center justify-center gap-2 sm:w-auto"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 5v14M5 12h14"/>
           </svg>
           Novo Livro
-        </Link>
+        </button>
       </div>
 
       <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 overflow-hidden">
@@ -296,7 +357,95 @@ export default function BooksList() {
         );
       })()}
 
+      {/* Create Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity">
+          <div className="bg-white dark:bg-zinc-950 w-full max-w-md rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-5 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+                Novo Livro
+              </h3>
+              <button
+                onClick={() => { setIsCreateOpen(false); setCreateMessage(null); }}
+                className="p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+
+            <form ref={createFormRef} onSubmit={submitCreate} className="p-6 space-y-5 flex flex-col max-h-[80vh] overflow-y-auto">
+              {createMessage && (
+                <div className={`p-4 rounded-xl text-sm font-medium ${createMessage.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" : "bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"}`}>
+                  {createMessage.text}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label htmlFor="new-title" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Título do Livro</label>
+                <input type="text" id="new-title" name="title" required placeholder="Ex: O Senhor dos Anéis"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="new-author" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Autor</label>
+                <input type="text" id="new-author" name="author" required placeholder="Ex: J.R.R. Tolkien"
+                  className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="new-publisherId" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Editora / Selo</label>
+                <select id="new-publisherId" name="publisherId" required
+                  className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 disabled:opacity-50">
+                  <option value="" disabled>Selecione uma editora</option>
+                  {publishers.map((pub) => (
+                    <option key={pub.id} value={pub.id}>{pub.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label htmlFor="new-isbn" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">ISBN</label>
+                  <input type="text" id="new-isbn" name="isbn" required placeholder="978-0..."
+                    className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="new-year" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300">Ano</label>
+                  <input type="number" id="new-year" name="year" required placeholder="2024"
+                    className="w-full px-4 py-2.5 bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600" />
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => { setIsCreateOpen(false); setCreateMessage(null); }}
+                  className="flex-1 px-4 py-3 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 font-semibold rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-500/50">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={isCreating}
+                  className="flex-1 relative group px-4 py-3 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50">
+                  <span className="flex items-center justify-center gap-2">
+                    {isCreating ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Salvando...
+                      </>
+                    ) : "Adicionar ao Acervo"}
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Edit Modal */}
+
       {editingBook && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity">
           <div className="bg-white dark:bg-zinc-950 w-full max-w-md rounded-3xl shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
