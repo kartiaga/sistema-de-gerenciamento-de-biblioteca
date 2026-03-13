@@ -1,36 +1,77 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 📚 FIAP - Sistema de Gerenciamento de Biblioteca
 
-## Getting Started
+Esta é uma aplicação **Fullstack** desenvolvida como atividade prática para a disciplina de **TypeScript** na FIAP. O projeto consiste em um sistema de gerenciamento de acervo (CRUD) integrado a um banco de dados relacional.
 
-First, run the development server:
+---
 
+## 🚀 Tecnologias Utilizadas
+
+O projeto foi construído utilizando as versões mais recentes das seguintes ferramentas para garantir performance e tipagem forte:
+
+* **Framework:** [Next.js 15+](https://nextjs.org/) (App Router)
+* **Linguagem:** [TypeScript](https://www.typescriptlang.org/) (Versão estável mais recente)
+* **Estilização:** [Tailwind CSS](https://tailwindcss.com/)
+* **ORM:** [Prisma](https://www.prisma.io/)
+* **Banco de Dados:** PostgreSQL
+* **Infraestrutura:** [Docker](https://www.docker.com/) (para containerização do banco de dados)
+
+---
+
+## 📋 Requisitos do Projeto
+
+### Funcionais (CRUD)
+A API e a interface permitem realizar as seguintes operações na entidade **Livro**:
+- [x] **Create:** Cadastro de novos livros.
+- [x] **Read:** Listagem e consulta de livros existentes.
+- [x] **Update:** Atualização de dados (Título, Autor, ISBN, Ano).
+- [x] **Delete:** Remoção de registros do sistema.
+
+### Estrutura da Entidade
+Cada livro possui a seguinte estrutura de dados:
+* **Título:** Nome da obra.
+* **Autor(a):** Responsável pela escrita.
+* **ISBN:** Identificador único internacional.
+* **Ano de Publicação:** Ano em que foi lançado.
+
+---
+
+## 🛠️ Como Executar o Projeto
+
+Siga os passos abaixo para rodar a aplicação localmente:
+
+### 1. Pré-requisitos
+* **Node.js** (v18 ou superior)
+* **Docker** e **Docker Compose**
+
+### 2. Instalação
+Clone o repositório e instale as dependências:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone [https://github.com/seu-usuario/seu-repositorio.git](https://github.com/seu-usuario/seu-repositorio.git)
+cd seu-repositorio
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Banco de Dados (Docker)
+Inicie o container do PostgreSQL:
+```bash
+docker-compose up -d
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Configuração do Prisma
+Execute as migrações para criar as tabelas no banco:
+```bash
+npx prisma migrate dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 5. Executar a Aplicação
+Inicie o servidor de desenvolvimento:
+```bash
+npm run dev
+```
 
-## Learn More
+Acesse a aplicação em: [http://localhost:3000](http://localhost:3000)
 
-To learn more about Next.js, take a look at the following resources:
+## 🎓 Objetivo da Atividade
+Atividade individual desenvolvida com o objetivo de fixar os conteúdos de TypeScript, integração com bancos de dados (SQL/NoSQL) e criação de APIs robustas.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Nota: Esta é uma atividade de fixação de conteúdo da grade curricular da FIAP.
