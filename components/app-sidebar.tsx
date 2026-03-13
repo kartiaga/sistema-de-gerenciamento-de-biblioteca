@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Book, LayoutDashboard, PlusCircle, Building2 } from "lucide-react";
+import { Book, LayoutDashboard, PlusCircle, Building2, UserPlus } from "lucide-react";
 
 import {
   Sidebar,
@@ -31,9 +31,14 @@ const items = [
     icon: PlusCircle,
   },
   {
-    title: "Nova Editora",
+    title: "Editoras",
     url: "/publishers",
     icon: Building2,
+  },
+  {
+    title: "Cadastrar Editora",
+    url: "/publishers/new",
+    icon: UserPlus,
   },
 ]
 
