@@ -26,19 +26,9 @@ const items = [
     icon: Book,
   },
   {
-    title: "Cadastrar Livro",
-    url: "/books/new",
-    icon: PlusCircle,
-  },
-  {
     title: "Editoras",
     url: "/publishers",
     icon: Building2,
-  },
-  {
-    title: "Cadastrar Editora",
-    url: "/publishers/new",
-    icon: UserPlus,
   },
 ]
 
