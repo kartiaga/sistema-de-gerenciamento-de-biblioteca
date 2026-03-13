@@ -16,6 +16,9 @@ export class BookRepository {
 
   async findAll() {
     return await prisma.book.findMany({
+      include: {
+        publisher: true
+      },
       orderBy: { createdAt: 'desc' }
     });
   }

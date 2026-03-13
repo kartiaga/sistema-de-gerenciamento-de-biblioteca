@@ -1,13 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+interface Publisher {
+  id: number;
+  name: string;
+}
+
 export default function Books() {
   const router = useRouter();
+  const [publishers, setPublishers] = useState<Publisher[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingPublishers, setLoadingPublishers] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    async function fetchPublishers() {
+      try {
+        const res = await fetch("/api/publishers");
+        if (res.ok) {
+          const data = await res.json();
+          setPublishers(data.publishers);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar editoras", err);
+      } finally {
+        setLoadingPublishers(false);
+      }
+    }
+    fetchPublishers();
+  }, []);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -20,6 +44,7 @@ export default function Books() {
       author: formData.get("author"),
       isbn: formData.get("isbn"),
       year: formData.get("year"),
+      publisherId: formData.get("publisherId"),
     };
 
     try {
@@ -106,6 +131,28 @@ export default function Books() {
                 placeholder="Ex: J.R.R. Tolkien"
                 className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
               />
+            </div>
+            
+            <div className="space-y-2 group">
+              <label htmlFor="publisherId" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
+                Editora / Selo
+              </label>
+              <select
+                id="publisherId"
+                name="publisherId"
+                required
+                disabled={loadingPublishers}
+                className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm appearance-none"
+              >
+                <option value="" disabled selected>
+                  {loadingPublishers ? "Carregando editoras..." : "Selecione uma editora"}
+                </option>
+                {publishers.map((pub) => (
+                  <option key={pub.id} value={pub.id}>
+                    {pub.name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-5">

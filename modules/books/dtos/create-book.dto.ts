@@ -3,4 +3,5 @@ export interface CreateBookDTO {
   author: string;
   isbn: string;
   publishYear: number;
+  publisherId: number;
 }

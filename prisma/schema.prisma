@@ -13,12 +13,16 @@ datasource db {
 }
 
 model Book {
-  id          Int      @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
   title       String
   author      String
-  isbn        String   @unique
+  isbn        String    @unique
   publishYear Int
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
+
+  // Relation mapping:
+  publisher   Publisher @relation(fields: [publisherId], references: [id])
+  publisherId Int
 
   @@map("books") // Garante que a tabela no Postgres se chame "books"
 }
@@ -29,6 +33,9 @@ model Publisher {
   address String
   website String
   email   String
+  
+  // Relation back-reference:
+  books   Book[]
 
   @@map("publishers")
 }

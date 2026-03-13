@@ -9,7 +9,7 @@ export class BookService {
   }
 
   async createBook(data: CreateBookDTO) {
-    if (!data.title || !data.author || !data.isbn || !data.publishYear) {
+    if (!data.title || !data.author || !data.isbn || !data.publishYear || !data.publisherId) {
       throw new Error("INCOMPLETE_DATA");
     }
 

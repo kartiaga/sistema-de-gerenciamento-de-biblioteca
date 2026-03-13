@@ -10,13 +10,14 @@ export class BookController {
 
   async create(request: Request) {
     try {
-      const { title, author, isbn, year } = await request.json();
+      const { title, author, isbn, year, publisherId } = await request.json();
 
       const newBook = await this.bookService.createBook({
         title,
         author,
         isbn,
         publishYear: parseInt(year),
+        publisherId: parseInt(publisherId),
       });
 
       return NextResponse.json(

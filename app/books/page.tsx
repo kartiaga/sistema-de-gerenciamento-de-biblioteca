@@ -10,11 +10,15 @@ interface Book {
   author: string;
   isbn: string;
   publishYear: number;
+  publisher?: {
+    name: string;
+  };
 }
 
 export default function BooksList() {
   const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -86,6 +90,7 @@ export default function BooksList() {
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">ID</th>
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">Título</th>
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">Autor</th>
+                    <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">Editora</th>
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">ISBN</th>
                     <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400 text-right">Ano</th>
                   </tr>
@@ -96,6 +101,7 @@ export default function BooksList() {
                       <td className="py-4 px-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{book.id}</td>
                       <td className="py-4 px-4 text-sm text-zinc-900 dark:text-zinc-100 font-semibold">{book.title}</td>
                       <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300">{book.author}</td>
+                      <td className="py-4 px-4 text-sm text-zinc-800 dark:text-zinc-200">{book.publisher?.name || 'Desconhecida'}</td>
                       <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300 font-mono">{book.isbn}</td>
                       <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300 text-right">{book.publishYear}</td>
                     </tr>
