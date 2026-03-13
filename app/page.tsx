@@ -31,23 +31,8 @@ export default function Home() {
             Visualize e faça a gestão do catálogo de livros salvos no banco.
           </p>
         </Link>
-
-        {/* Card 2 */}
-        <Link href="/books/new" className="group rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 shadow-sm transition-all hover:shadow-md hover:border-emerald-500/50">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-600 transition-colors">
-              Cadastrar Livro
-            </h3>
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
-              <PlusCircle className="w-5 h-5" />
-            </div>
-          </div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Adicione novos registros literários, controle ISBN e anos de edição.
-          </p>
-        </Link>
         
-        {/* Card 3 */}
+        {/* Card 2 */}
         <Link href="/publishers" className="group rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-6 shadow-sm transition-all hover:shadow-md hover:border-amber-500/50">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-600 transition-colors">
