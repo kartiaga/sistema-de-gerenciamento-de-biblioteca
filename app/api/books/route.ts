@@ -1,4 +1,4 @@
-import { BookController } from "@/modules/books/bookController";
+import { BookController } from "@/modules/books/book.controller";
 
 const bookController = new BookController();
 

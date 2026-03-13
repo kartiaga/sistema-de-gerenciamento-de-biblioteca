@@ -1,4 +1,5 @@
-import { BookRepository, CreateBookDTO } from "./bookRepository";
+import { BookRepository } from "./book.repository";
+import { CreateBookDTO } from "./dtos/create-book.dto";
 
 export class BookService {
   private bookRepository: BookRepository;

@@ -1,11 +1,5 @@
 import { prisma } from "@/lib/prisma";
-
-export interface CreateBookDTO {
-  title: string;
-  author: string;
-  isbn: string;
-  publishYear: number;
-}
+import { CreateBookDTO } from "./dtos/create-book.dto";
 
 export class BookRepository {
   async create(data: CreateBookDTO) {

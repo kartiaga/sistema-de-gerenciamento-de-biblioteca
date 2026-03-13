@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { BookService } from "./bookService";
+import { BookService } from "./book.service";
 
 export class BookController {
   private bookService: BookService;

@@ -1,164 +1,122 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 
-export default function Books() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+interface Book {
+  id: number;
+  title: string;
+  author: string;
+  isbn: string;
+  publishYear: number;
+}
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage(null);
+export default function BooksList() {
+  const [books, setBooks] = useState<Book[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-    const formData = new FormData(e.currentTarget);
-    const data = {
-      title: formData.get("title"),
-      author: formData.get("author"),
-      isbn: formData.get("isbn"),
-      year: formData.get("year"),
-    };
-
-    try {
-      const res = await fetch("/api/books", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        throw new Error(result.error || "Ocorreu um erro ao salvar o livro.");
+  useEffect(() => {
+    async function fetchBooks() {
+      try {
+        const response = await fetch("/api/books");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar a lista de livros.");
+        }
+        const data = await response.json();
+        setBooks(data.books);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
       }
-
-      setMessage({ type: "success", text: result.message });
-      (e.target as HTMLFormElement).reset(); // Limpa o formulário
-    } catch (error: any) {
-      setMessage({ type: "error", text: error.message });
-    } finally {
-      setIsLoading(false);
     }
-  }
+
+    fetchBooks();
+  }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-white to-zinc-50 dark:from-zinc-900 dark:via-zinc-950 dark:to-black font-sans p-4 relative overflow-hidden">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-white to-zinc-50 dark:from-zinc-900 dark:via-zinc-950 dark:to-black font-sans p-6 relative overflow-hidden">
       
       {/* Decorative background elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-400/20 dark:bg-indigo-600/10 blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-400/20 dark:bg-blue-600/10 blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
-        <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 dark:border-zinc-800/50 overflow-hidden transform transition-all hover:shadow-indigo-500/10">
-          <div className="px-8 py-8 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-col items-center text-center">
-            <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 rounded-2xl flex items-center justify-center mb-4 text-indigo-600 dark:text-indigo-400 shadow-inner">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
-              </svg>
+      <div className="w-full max-w-5xl relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+        <div className="bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 dark:border-zinc-800/50 overflow-hidden transform transition-all hover:shadow-indigo-500/10 flex flex-col">
+          
+          <div className="px-8 py-8 border-b border-zinc-200/50 dark:border-zinc-800/50 flex flex-row items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-inner">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2zM12 2v20"/>
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-zinc-900 to-zinc-600 dark:from-zinc-100 dark:to-zinc-400 tracking-tight">
+                  Acervo Literário
+                </h1>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-medium">
+                  Controle do banco de livros disponíveis
+                </p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-br from-zinc-900 to-zinc-600 dark:from-zinc-100 dark:to-zinc-400 tracking-tight">
-              Novo Título
-            </h1>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2 font-medium">
-              Adicione os detalhes do acervo literário
-            </p>
+            
+            <Link 
+              href="/books/new"
+              className="px-5 py-2.5 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 text-white font-semibold rounded-xl shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 text-sm flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              Novo Livro
+            </Link>
           </div>
           
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
-            
-            {message && (
-              <div className={`p-4 rounded-xl text-sm font-medium animate-in fade-in zoom-in-95 duration-300 ${message.type === "success" ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20" : "bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"}`}>
-                {message.text}
+          <div className="p-8">
+            {error ? (
+              <div className="p-4 bg-red-50 text-red-600 border border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20 rounded-xl font-medium text-center">
+                {error}
+              </div>
+            ) : isLoading ? (
+              <div className="w-full flex justify-center py-12">
+                <svg className="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              </div>
+            ) : books.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-zinc-500 dark:text-zinc-400">Nenhum livro cadastrado no sistema ainda.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-zinc-200 dark:border-zinc-800">
+                      <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">ID</th>
+                      <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">Título</th>
+                      <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">Autor</th>
+                      <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400">ISBN</th>
+                      <th className="pb-4 pt-2 px-4 font-semibold text-sm text-zinc-500 dark:text-zinc-400 text-right">Ano</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-200/50 dark:divide-zinc-800/50">
+                    {books.map((book) => (
+                      <tr key={book.id} className="group hover:bg-zinc-50/50 dark:hover:bg-zinc-800/20 transition-colors">
+                        <td className="py-4 px-4 text-sm font-medium text-zinc-900 dark:text-zinc-100">{book.id}</td>
+                        <td className="py-4 px-4 text-sm text-zinc-900 dark:text-zinc-100 font-semibold">{book.title}</td>
+                        <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300">{book.author}</td>
+                        <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300 font-mono">{book.isbn}</td>
+                        <td className="py-4 px-4 text-sm text-zinc-600 dark:text-zinc-300 text-right">{book.publishYear}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
-
-            <div className="space-y-2 group">
-              <label htmlFor="title" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
-                Título do Livro
-              </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                required
-                placeholder="Ex: O Senhor dos Anéis"
-                className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
-              />
-            </div>
-
-            <div className="space-y-2 group">
-              <label htmlFor="author" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
-                Autor
-              </label>
-              <input
-                type="text"
-                id="author"
-                name="author"
-                required
-                placeholder="Ex: J.R.R. Tolkien"
-                className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-5">
-              <div className="space-y-2 group">
-                <label htmlFor="isbn" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
-                  ISBN
-                </label>
-                <input
-                  type="text"
-                  id="isbn"
-                  name="isbn"
-                  required
-                  placeholder="978-0..."
-                  className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
-                />
-              </div>
-
-              <div className="space-y-2 group">
-                <label htmlFor="year" className="block text-sm font-semibold text-zinc-700 dark:text-zinc-300 transition-colors group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
-                  Ano
-                </label>
-                <input
-                  type="number"
-                  id="year"
-                  name="year"
-                  required
-                  placeholder="2024"
-                  className="w-full px-4 py-3 bg-white/50 dark:bg-zinc-950/50 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
-                />
-              </div>
-            </div>
-
-            <div className="pt-6">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full relative group overflow-hidden px-4 py-3.5 bg-zinc-900 dark:bg-indigo-600 hover:bg-zinc-800 dark:hover:bg-indigo-500 disabled:opacity-70 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg shadow-zinc-900/20 dark:shadow-indigo-900/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-zinc-900/50 dark:focus:ring-indigo-500/50 focus:ring-offset-2 dark:focus:ring-offset-zinc-900 active:scale-[0.98]"
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  {isLoading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:scale-110">
-                        <path d="M5 12h14"/>
-                        <path d="M12 5v14"/>
-                      </svg>
-                      Adicionar ao Acervo
-                    </>
-                  )}
-                </span>
-                {!isLoading && <div className="absolute inset-0 bg-white/10 dark:bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-in-out"></div>}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
